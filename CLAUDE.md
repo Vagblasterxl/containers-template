@@ -4,7 +4,13 @@ This document provides essential context for AI assistants working with this cod
 
 ## Project Overview
 
-This is a **Cloudflare Containers Starter Template** demonstrating how to build and deploy containerized applications using Cloudflare's Workers, Containers, and Durable Objects services. It combines a TypeScript-based Cloudflare Worker for orchestration with a Go-based container for workload execution.
+This is the **persistent backend** for the Borg Engine system. Built on Cloudflare Workers + Containers + Durable Objects, it provides:
+- **State API** — namespaced key-value storage backed by Durable Object SQLite
+- **Lifecycle tracking** — container start/stop/error events persisted to SQLite
+- **Health checks** — both Durable Object and Go container health endpoints
+- **Container orchestration** — parameterized routing, singleton, load balancing
+
+See `SYSTEM_MANIFEST.md` for the full cross-system architecture and gap analysis.
 
 ## Tech Stack
 
@@ -23,15 +29,16 @@ This is a **Cloudflare Containers Starter Template** demonstrating how to build 
 ```
 containers-template/
 ├── src/
-│   └── index.ts              # Main Worker code with Hono app and Container class
+│   └── index.ts              # Worker: Container class + State API + Hono routes
 ├── container_src/
-│   ├── main.go               # Go HTTP server running inside the container
+│   ├── main.go               # Go HTTP server with health endpoint
 │   └── go.mod                # Go module definition
 ├── Dockerfile                # Multi-stage Docker build for Go container
 ├── wrangler.jsonc            # Wrangler configuration (Workers, Containers, DOs)
 ├── tsconfig.json             # TypeScript configuration
 ├── worker-configuration.d.ts # Auto-generated Cloudflare types
 ├── package.json              # Node.js dependencies and scripts
+├── SYSTEM_MANIFEST.md        # Full cross-system architecture and gap analysis
 └── README.md                 # User-facing documentation
 ```
 
@@ -39,15 +46,16 @@ containers-template/
 
 ### `src/index.ts` - Worker Entry Point
 - Defines `MyContainer` class extending `Container<Env>` base class
-- Configures container port (8080), sleep timeout (2m), and environment variables
-- Implements lifecycle hooks: `onStart()`, `onStop()`, `onError()`
-- Creates Hono web app with routing patterns for container orchestration
+- **SQLite tables**: `state` (namespaced key-value) and `lifecycle_events` (start/stop/error log)
+- Lifecycle hooks persist events to SQLite (not just console.log)
+- `fetch()` override intercepts `/state/*`, `/events`, `/do-health` before proxying to container
+- Hono app exposes State API, lifecycle events, health checks, and original container routes
 
 ### `container_src/main.go` - Container Application
 - Go HTTP server listening on port 8080
 - Implements graceful shutdown (SIGINT/SIGTERM with 5s timeout)
-- Routes: `/` and `/container` for normal requests, `/error` for panic testing
-- Accesses `MESSAGE` and `CLOUDFLARE_DURABLE_OBJECT_ID` environment variables
+- Routes: `/` and `/container` for echo, `/health` for health check, `/error` for panic testing
+- Health endpoint reports uptime, goroutine count, memory, Go version
 
 ### `wrangler.jsonc` - Cloudflare Configuration
 - Defines container class `MyContainer` with max 10 instances
@@ -93,14 +101,22 @@ export class MyContainer extends Container<Env> {
 }
 ```
 
-### Routing Patterns
+### API Routes
 
-| Route | Pattern | Helper Function |
-|-------|---------|-----------------|
-| `/container/:id` | Parameterized routing | `c.env.MY_CONTAINER.idFromName()` |
-| `/singleton` | Single instance | `getContainer(env.MY_CONTAINER)` |
-| `/lb` | Load balancing (3 instances) | `getRandom(env.MY_CONTAINER, 3)` |
-| `/error` | Error handling demo | `getContainer(env.MY_CONTAINER, "error-test")` |
+| Method | Route | What it does |
+|--------|-------|-------------|
+| GET | `/` | JSON index of all endpoints |
+| GET | `/api/state/:ns` | List all keys in namespace |
+| GET | `/api/state/:ns/:key` | Read a key |
+| POST | `/api/state/:ns/:key` | Write a key (body: `{value: ...}`) |
+| DELETE | `/api/state/:ns/:key` | Delete a key |
+| GET | `/api/events` | Lifecycle events (`?limit=N`) |
+| GET | `/api/health` | Durable Object health check |
+| GET | `/api/container-health` | Go container health check |
+| GET | `/container/:id` | Route to specific container instance |
+| GET | `/singleton` | Single persistent container instance |
+| GET | `/lb` | Load balance across 3 containers |
+| GET | `/error` | Error handling demo (forces panic) |
 
 ### Hono App Pattern
 ```typescript
