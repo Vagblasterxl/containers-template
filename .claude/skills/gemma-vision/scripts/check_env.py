@@ -5,8 +5,8 @@ import subprocess
 import shutil
 
 REQUIRED_TRANSFORMERS = (5, 5, 0)
-MIN_RAM_GB = 10
-MIN_VRAM_GB = 6
+MIN_RAM_GB = 5
+MIN_VRAM_GB = 4
 
 
 def check_python():
@@ -72,7 +72,7 @@ def check_model_cache():
     model_id = "models--google--gemma-4-E4B-it"
     cached = os.path.exists(os.path.join(cache_dir, model_id))
     status = "OK" if cached else "INFO"
-    msg = "model cached locally" if cached else "not cached — first run will download ~3GB"
+    msg = "model cached locally" if cached else "not cached — first run will download ~5–15GB depending on quantization (Q4_K_M≈5.4GB, BF16≈15GB)"
     print(f"[{status}] google/gemma-4-E4B-it: {msg}")
     return True
 

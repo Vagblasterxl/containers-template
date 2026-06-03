@@ -39,7 +39,7 @@ def load_image_as_url(path_or_url: str) -> str:
 def infer_local(image_url: str, prompt: str) -> tuple[str, float]:
     from transformers import pipeline
 
-    print(f"[INFO] Loading {MODEL_ID} (first run downloads ~3GB)...", file=sys.stderr)
+    print(f"[INFO] Loading {MODEL_ID} (first run downloads ~5–15GB depending on quantization)...", file=sys.stderr)
     t0 = time.time()
     pipe = pipeline(
         task="image-text-to-text",

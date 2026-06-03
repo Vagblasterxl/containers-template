@@ -5,18 +5,9 @@ description: >
   whenever the user asks to analyze, inspect, describe, review, or understand
   an image or set of images. Also triggers on: "what's in this image",
   "look at this screenshot", "analyze this photo", "examine this image",
-  "tell me about this image", "read this image", "interpret this visual".
-triggers:
-  - analyze image
-  - analyze this image
-  - look at this image
-  - examine this image
-  - describe this image
-  - what is in this image
-  - review this screenshot
-  - interpret this visual
-  - image analysis
-  - vision analysis
+  "tell me about this image", "read this image", "interpret this visual",
+  "analyze image", "image analysis", "vision analysis", "describe this image",
+  "what is in this image".
 ---
 
 # Image Analysis Skill
@@ -134,3 +125,10 @@ Always mention if:
 - Parts of the image are obscured, cropped, or blurry
 - You cannot identify a person's identity (you never attempt this)
 - The content requires domain expertise to fully interpret (medical, legal, technical)
+
+## Model notes
+
+- High-resolution vision (up to 2576px long edge) is available on **Claude Opus 4.8** and 4.7
+- All Claude models (Opus, Sonnet, Haiku) support vision on the same API interface
+- Up to 100 images per request on 200K-context models; more on extended-context models
+- Total image payload limit: 32MB per request

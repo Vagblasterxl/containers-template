@@ -7,20 +7,9 @@ description: >
   data OUT of an image into a usable format. Triggers on: "extract data from
   image", "parse this receipt", "read this table", "get the numbers from this
   chart", "extract fields from this form", "OCR and structure this", "turn
-  this image into JSON", "read this invoice", "digitize this document".
-triggers:
-  - extract data from image
-  - parse this image
-  - read this table
-  - extract from receipt
-  - extract from invoice
-  - read this form
-  - get data from chart
-  - digitize this document
-  - image to JSON
-  - image to CSV
-  - structured extraction
-  - vision extract
+  this image into JSON", "read this invoice", "digitize this document",
+  "image to JSON", "image to CSV", "structured extraction", "vision extract",
+  "parse this image", "read this form", "get data from chart".
 ---
 
 # Vision Data Extraction Skill

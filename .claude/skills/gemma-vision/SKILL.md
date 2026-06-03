@@ -6,16 +6,9 @@ description: >
   skill when the user wants to run image analysis offline, on edge hardware,
   without the Anthropic API, or explicitly asks to use Gemma. Also use when
   the user mentions: "run locally", "no API", "edge device", "Gemma vision",
-  "gemma image", "offline image analysis", "Raspberry Pi vision".
-triggers:
-  - gemma vision
-  - gemma image
-  - analyze image with gemma
-  - run image analysis locally
-  - local image analysis
-  - offline image analysis
-  - gemma 4 E4B
-  - edge image analysis
+  "gemma image", "offline image analysis", "Raspberry Pi vision",
+  "gemma 4 E4B", "local image analysis", "edge image analysis",
+  "analyze image with gemma".
 ---
 
 # Gemma Vision Skill
@@ -48,7 +41,7 @@ This script verifies:
 - Python ≥ 3.10
 - `transformers` ≥ 5.5.0 installed
 - `torch` installed
-- Available VRAM / RAM (E4B needs ~6GB VRAM or ~10GB RAM for CPU)
+- Available VRAM / RAM (E4B needs ~4–5GB VRAM (Q4 quantized) or ~5GB+ RAM for CPU)
 - Whether the model is already cached locally
 
 If the environment check fails, output the exact install commands needed.
@@ -67,7 +60,7 @@ python3 .claude/skills/gemma-vision/scripts/gemma_infer.py \
 ### Script behavior
 - If `--endpoint` is provided: sends a multimodal chat request to that URL
 - If no endpoint: loads `google/gemma-4-E4B-it` from Hugging Face cache (or
-  downloads it on first run — ~3GB)
+  downloads on first run — ~5–15GB depending on quantization)
 - Outputs the model's response to stdout
 - Prints inference time and token count to stderr
 
@@ -92,7 +85,7 @@ Format the output:
 ### Notes
 - Model: google/gemma-4-E4B-it
 - E4B is optimized for speed over depth; for complex reasoning consider Claude
-- First run downloads ~3GB of model weights
+- First run downloads ~5–15GB of model weights (Q4_K_M≈5.4GB, BF16≈15GB)
 ```
 
 ## Step 5 — Offer follow-up
@@ -114,8 +107,9 @@ After analysis, offer:
 ## Reference: Key Gemma 4 E4B facts
 
 - Parameters: 4B effective (MatMul-Free efficient architecture)
-- Context: 32K tokens
+- Context: 128K tokens
 - Image input: variable aspect ratios, up to 896×896 per tile
 - Audio: supported natively (E2B and E4B models)
+- Quantization: Q4_K_M recommended for ≤6GB VRAM (~5.4GB); BF16 full precision needs ~15GB
 - License: Gemma Terms of Service (commercial use allowed with restrictions)
 - HuggingFace: `google/gemma-4-E4B-it`
